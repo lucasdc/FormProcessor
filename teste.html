@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		#canvas { margin: 0 auto; }
+	</style>
+</head>
+<body>
+	<canvas id="canvas" width="1000" height="562"></canvas>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+	<script>
+	$(function(){
+		var startp = {x:50,y:50},
+			nodes = [
+				[null, null],
+				[null, null],
+				[null, null],
+				[null, null],
+				[null, null],
+				[null, null],
+				[null, null]
+			],
+			radius = 2,
+			gap = 30,
+			gridSize = 10,
+			i, j,
+			context = document.getElementById('canvas').getContext('2d');
+
+		for (i = 0; i < nodes.length; i++) {
+			for (j = 0; j < nodes[i].length; j++) {
+				nodes[i][j] = { x : startp.x + (i*gap), y : startp.y + (j*gap) };
+
+				context.beginPath();
+				context.fillStyle = "rgb(0 ,0 ,0)";
+
+				context.arc(nodes[i][j].x, nodes[i][j].y, radius, 0, Math.PI*2, true);
+				context.fill();
+				context.closePath();
+			};
+		};
+
+
+		function render() {
+			context.clearRect(0,0,1000, 562);
+
+			/*nodes[(Math.random()*nodes[0].length|0)][(Math.random()*10|0)].x = startp.x + (Math.random()*3|0);
+			nodes[(Math.random()*nodes.length|0)][(Math.random()*10|0)].y = startp.y + (Math.random()*3|0);*/
+
+
+			nodes[0][0].x = startp.x + (Math.random()*3|0);
+			nodes[0][0].y = startp.y + (Math.random()*3|0);
+
+			for (i = 0; i < nodes.length; i++) {
+				for (j = 0; j < nodes[i].length; j++) {
+					var node = nodes[i][j],
+						nodeLeft = (j+1 < nodes[i].length) ? nodes[i][j+1] : false,
+						nodeDown = (i+1 < nodes.length) ? nodes[i+1][j] : false;
+
+					if(nodeLeft) {
+						gapLeft = nodes[i][j+1].x - node.x;
+						if( gapLeft > gap )
+							nodes[i][j+1].x -= 1;
+						if( gapLeft < gap )
+							nodes[i][j+1].x += 1;
+
+						nodes[i][j+1].y = nodes[i][j].y;
+					}
+
+					if(nodeDown) {
+						gapDown = nodes[i+1][j].y - node.y;
+						if( gapDown > gap )
+							nodes[i+1][j].y -= 1;
+						if( gapDown < gap )
+							nodes[i+1][j].y += 1;
+
+						nodes[i+1][j].x = nodes[i][j].x;
+					}
+
+					context.beginPath();
+					context.fillStyle = "rgb(0 ,0 ,0)";
+
+					context.arc(nodes[i][j].x, nodes[i][j].y, radius, 0, Math.PI*2, true);
+					context.fill();
+					context.closePath();
+				}
+
+			}
+		}
+
+		setInterval(render, 1000/120);
+
+
+
+
+
+	});
+	</script>
+</body>
+</html>
