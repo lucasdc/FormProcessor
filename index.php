@@ -142,27 +142,27 @@
 
 			<label>
 				<span>É 20</span>
-				<input type="text" name="name" data-req="e20">
+				<input type="text" name="name" data-req="e20" class="ignore">
 			</label>
 
 			<label>
 				<span>É 100</span>
-				<input type="text" name="name" data-req="e100">
+				<input type="text" name="name" data-req="e100" class="ignore">
 			</label>
 
 			<label>
 				<span>E-mail</span>
-				<input type="text" name="mail" data-req="email">
+				<input type="text" name="mail" data-req="email" class="ignore">
 			</label>
 
 			<label>
 				<span>Data</span>
-				<input type="text" name="date" data-req="date{a/m/d}" data-mask="99/99/9999">
+				<input type="text" name="date" data-req="date{d/m/a}" data-mask="99/99/9999">
 			</label>
 	</div>
 		<label>
 			<span>Numero</span>
-			<input type="text" name="number" data-req="number|range{100,200}" data-mask="999">
+			<input type="text" name="number" data-req="number|range{100,200}" data-mask="999999">
 		</label>
 
 		<label>
@@ -200,25 +200,32 @@
 
 	</form>
 
+	<button id="teste1">teste 1</button>
+	<button id="teste2">teste 2</button>
+
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-	<script src="jquery.form.plugins.js"></script>
+	<script src="jquery.form.plugins_V2.js"></script>
 	<script>
 		$(function(){
-
-			$.addValidationRule('formOK',function(html) {
-				console.log(html);
-			});
 
 			$.addValidationRule('e20', function($el){
 				return $el.val() == '20';
 			});
-
-			$('form').formProc({ stopOnError : false, debug : true, autoMask : false });
+/**/
+			$('form').formProc({ validateOnBlur : true, stopOnError : false, debug : false, autoMask : false, ignoreFilter : '.ignore', onError : function(i,f){ alert('aaaaa' + i); } });
 
 			$.addValidationRule('e100', function($el){
 				return $el.val() == '100';
 			});
-		})
+
+
+			$.addAjaxResponse('formOK', function(resp){
+				console.log(resp);
+			});
+
+
+
+		});
 	</script>
 </body>
 </html>

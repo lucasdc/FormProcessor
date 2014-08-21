@@ -1,11 +1,11 @@
 /*!
- * jQuery Form Processor v0.1
+ * jQuery Form Processor v3.0
  *
- * Copyright (c) 2013 Lucas Dupke; Dual licensed: MIT/GPL
+ * Copyright (c) 2014 Lucas Dupke; Dual licensed: MIT/GPL
  */
 
 (function($, w, u){
-	//plugin de mascara
+	//Plugin de Mascara
 	$.fn.mask = function(){
 		var er_masks = {
 			'a' : '[a-zA-Z]',
@@ -42,156 +42,196 @@
 			}
 			$(this).val(new_val);
 		}
-		return $(this).on('input',check_mask);
-	}
+		return $(this).each(function(){
+			check_mask.apply(this);
+		}).on('input',check_mask);
+	};
+
 
 	//Regras
-	var ValidationRules = function(){};
-	var AjaxResponses = function(){};
+	var validationRules = {},
+			ajaxResponses = {};
 
 	var formProc_default_options = {
-		stopOnError : true,
-		onError : function(input, form) {
+		onError : function( input, form ) {
 			input.focus();
 			console.log(input);
 		},
-		onStart : function(form) {
-			console.clear();
+		onStart : function( form ) {
+			//console.clear();
 		},
-		onSuccess : function(form) {
-			console.log('Feitooooo');
+		onEnd : function( form, valid ) {
+			//console.clear();
 		},
-		onAjaxError : function(form) {
-			console.log('Erro no ajax');
+		onAjaxError : function( form ) {
+			//console.log('Erro no ajax');
 		},
 		formFilter : 'input[data-req], select[data-req], textarea[data-req]',
+		ignoreFilter : '',
+		stopOnError : true,
+		validateOnBlur : false,
 		debug : false,
 		autoMask : true
 	};
 
 	$.addValidationRule = function(name, fn) {
-		ValidationRules.prototype[name] = fn;
+		validationRules[name] = fn;
 	}
 
 	$.addAjaxResponse = function(name, fn) {
-		AjaxResponses.prototype[name] = fn;
+		ajaxResponses[name] = fn;
 	}
 
-	$.fn.validateForm = function(opts) {
-		var options = $.extend(formProc_default_options, opts || {}),
-			$form = $(this),
-			$inputs = $form.find(options.formFilter),
-			IsValid = true,
-			Rules = new ValidationRules(),
-			AjaxR = new AjaxResponses();
+	//Validação de campo
+	function validate_field( $el ) {
+		var isValid = true,
+				rules = validationRules,
+				elrules = $el.data('req').split('|'),
+				elruleslen = elrules.length,
+				i = 0, aux, fn, args;
 
-		if($form.data('status') != 'sending') {
+		while(i < elruleslen) {
+			aux = elrules[i].replace('}', '').split('{');
+			fn = aux[0];
+			args = aux[1];
 
-			$form.data('status', 'sending');
-
-			if($.isFunction(options.onStart))
-					options.onStart.call($form, $form);
-
-			$inputs.each(function(){
-				if(IsValid || !options.stopOnError) {
-					var $el = $(this),
-						elrules = $el.data('req').split('|'),
-						elruleslen = elrules.length,
-						i = 0, aux, fn, args;
-
-					while(i < elruleslen) {
-						aux = elrules[i].replace('}', '').split('{');
-						fn = aux[0];
-						args = aux[1];
-
-						if( $.isFunction( Rules[ fn ] ) ) {
-							if( !Rules[ fn ]($el, args) ) {
-								IsValid = false;
-								if($.isFunction(options.onError))
-									options.onError.call($el, $el, $form);
-
-								if(options.stopOnError)
-									break;
-							}
-						} else {
-							//log(fn + ": Não Existe", args);
-						}
-
-						i++;
-					}
+			if( $.isFunction( rules[ fn ] ) ) {
+				if( !rules[ fn ]($el, args) ) {
+					isValid = false;
 				}
 
-			});
-		}
-
-		return IsValid;
-	}
-
-	$.fn.formProc = function(opts) {
-
-		var options = $.extend(formProc_default_options, opts || {}),
-			log = function(){
-				if (window.console && console.log && options.debug)
-					console.log('[Form Processor] ' + Array.prototype.join.call(arguments, ' '));
-			};
-
-		if(options.autoMask) {
-			$(this).find('input[data-mask]').mask();
-		}
-
-		var formValidate = function() {
-
-			var $form = $(this),
-			IsValid = $form.validateForm(options);
-
-			if(IsValid) {
-				log('Form Valid');
-				if($form.data('ajax')) {
-					log('Send data via ajax');
-					$.post($form.prop('action'), $form.serialize())
-						.done(function(html){
-							log('Ajax done succesfuly');
-							var fn = $form.data('ajax');
-							if($.isFunction(AjaxR[fn])) {
-								AjaxR[fn].call($form, html);
-							} else {
-								if($.isFunction(options.onSuccess))
-									options.onSuccess.call($form, $form);
-							}
-
-							$form.data('status', 'idle');
-						})
-						.fail(function(){
-							log('Ajax failed');
-							if($.isFunction(options.onAjaxError))
-									options.onAjaxError .call($form, $form);
-
-							$form.data('status', 'idle');
-						});
-
-					return false;
-				} else {
-					log('Send data normaly (GET, POST)');
-					if($.isFunction(options.onSuccess))
-						options.onSuccess.call($form, $form);
-
-					$form.data('status', 'idle');
-
-					return true;
-				}
-			} else {
-				log('Form Invalid');
-				$form.data('status', 'idle');
 			}
 
-			return false;
-		};
+			i++;
+
+		}
+
+		return isValid;
+
+	}
+
+	function call_fn( fn, scope, arg1, arg2 ) {
+		if( $.isFunction( fn ) ) {
+			fn.call( scope, arg1, arg2 );
+		}
+	}
+
+	$.fn.validate = function(opts){
+		var options = $.extend( {}, formProc_default_options, opts ),
+				$form = this,
+				is_valid = true,
+				$elements, i;
+
+		if( $form.length > 0 ) {
+			//onStart
+			call_fn( options.onStart, $form, $form );
+
+			if( $form.eq(0).is('input,select,textarea') ) {
+				if( !validate_field( $form.eq(0) ) ) {
+					//onError
+					call_fn( options.onError, $form, $form.eq(0), $form );
+					is_valid = false;
+
+				}
+
+			} else {
+				$elements = $form.find( options.formFilter ).filter(':not( ' + options.ignoreFilter + ' )');
+
+				for ( i = 0; i < $elements.length; i++ ) {
+					if( !validate_field( $( $elements[i] ) ) ) {
+						//onError
+						call_fn( options.onError, $( $elements[i] ), $( $elements[i] ), $form );
+						is_valid = false;
+
+						if( options.stopOnError )
+							break;
+
+					}
+
+				}
+
+			}
+
+			//onEnd
+			call_fn( options.onEnd, $form, $form, is_valid );
+
+		}
+
+		return is_valid;
+	};
+
+	$.fn.formProc = function( opts ){
+		var options = $.extend( {}, formProc_default_options, opts );
+
+		if(options.autoMask)
+			this.find( 'input[data-mask], textarea[data-mask]' ).mask();
+
+		if(options.validateOnBlur) {
+			var $elements = this.find( options.formFilter ).filter(':not( ' + options.ignoreFilter + ' )');
+			$elements.each(function(i, el){
+				$(this).on('blur', function(){
+					$(this).validate( options );
+
+				});
+
+			});
+
+		}
 
 
-		return $(this).each(function(){
-			$(this).data('status', 'idle');
-		}).on('submit.FormProc', formValidate);
+		this.data( 'sending', false );
 
+		return $( this ).on( 'submit', function(){
+			var $form = $( this ),
+					is_valid = true,
+					is_ajax = $form.data( 'ajax' ),
+					url = $form.attr( 'action' );
+
+			if( !$form.data( 'sending' ) ) {
+				$form.data( 'sending', true );
+				is_valid = $form.validate( options );
+
+				if( is_valid ) {
+					if( is_ajax ) {
+
+						$.post( url, $form.serialize() )
+							.done(
+								function(resp){
+									call_fn( ajaxResponses[ is_ajax ], $form, resp );
+
+								}
+
+							).fail(
+								function(){
+									call_fn( options.onAjaxError, $form, $form );
+
+								}
+
+							)
+							.always(
+								function(){
+									$form.data( 'sending', false );
+
+								}
+
+							);
+						return false;
+
+					}
+
+				} else {
+					$form.data( 'sending', false );
+
+				}
+
+				return is_valid;
+
+			} else {
+				return false;
+
+			}
+
+		});
 	};
 
 	/*DATA*/
@@ -220,7 +260,7 @@
 	$.addValidationRule('required', function($el, maxlength){
 		var mlen = maxlength || 9e6,
 			val = $el.val();
-		if (val.length <= 0 || val.length >= mlen)
+		if (val.length <= 0 || val.length > mlen)
 			return false;
 		return true;
 	});
@@ -267,7 +307,3 @@
 		return $('input[type="' + $el.attr('type') + '"][name="' + $el.attr('name') + '"]:checked').length > 0;
 	});
 })(jQuery, window);
-
-/*
-(function(b,p,q){var f=function(){},g=function(){},m={stopOnError:!0,onError:function(a,c){a.focus();console.log(a)},onStart:function(a){console.clear()},onSuccess:function(a){console.log("Feitooooo")},onAjaxError:function(a){console.log("Erro no ajax")},formFilter:"input[data-req], select[data-req], textarea[data-req]",debug:!1};b.addValidationRule=function(a,c){f.prototype[a]=c};b.addAjaxResponse=function(a,c){g.prototype[a]=c};b.fn.validateForm=function(a){var c=b.extend(m,a||{}),d=b(this);a=d.find(c.formFilter); var e=!0,n=new f;new g;"sending"!=d.data("status")&&(d.data("status","sending"),b.isFunction(c.onStart)&&c.onStart.call(d,d),a.each(function(){if(e||!c.stopOnError)for(var a=b(this),f=a.data("req").split("|"),g=f.length,k=0,h,l;k<g;){h=f[k].replace("}","").split("{");l=h[0];h=h[1];if(b.isFunction(n[l])&&!n[l](a,h)&&(e=!1,b.isFunction(c.onError)&&c.onError.call(a,a,d),c.stopOnError))break;k++}}));return e};b.fn.formProc=function(a){var c=b.extend(m,a||{}),d=function(){window.console&&console.log&& c.debug&&console.log("[Form Processor] "+Array.prototype.join.call(arguments," "))};return b(this).each(function(){b(this).data("status","idle")}).on("submit.FormProc",function(){var a=b(this);if(a.validateForm(c))if(d("Form Valid"),a.data("ajax"))d("Send data via ajax"),b.post(a.prop("action"),a.serialize()).done(function(f){d("Ajax done succesfuly");var g=a.data("ajax");b.isFunction(AjaxR[g])?AjaxR[g].call(a,f):b.isFunction(c.onSuccess)&&c.onSuccess.call(a,a);a.data("status","idle")}).fail(function(){d("Ajax failed"); b.isFunction(c.onAjaxError)&&c.onAjaxError.call(a,a);a.data("status","idle")});else return d("Send data normaly (GET, POST)"),b.isFunction(c.onSuccess)&&c.onSuccess.call(a,a),a.data("status","idle"),!0;else d("Form Invalid"),a.data("status","idle");return!1})};b.addValidationRule("date",function(a,c,b){c=(c||"d/m/a").replace("y","a");c=c.split(b=/([^\w\d])/gi.exec(c)[0]);b=a.val().split(b);a={a:0,m:0,d:0};for(var e=c.length;e--;)a[c[e]]=""+b[e];c=new Date(a.a,a.m-1,a.d);return 3>a.m.length&&3>a.d.length&& 4==a.a.length?a.m==c.getMonth()+1&&!isNaN(+c):!1});b.addValidationRule("email",function(a){return/^[\w\.%\+\-]+@(?:[A-Z0-9\-]+\.)+(?:[A-Z]{2,6})$/i.test(a.val())});b.addValidationRule("required",function(a,c){var b=c||9E6,e=a.val();return 0>=e.length||e.length>=b?!1:!0});b.addValidationRule("min",function(a,c){var b=c||0;return a.val().length<b?!1:!0});b.addValidationRule("number",function(a){a=a.val();return""==a||isNaN(a)?!1:!0});b.addValidationRule("matches",function(a,c){return a.val()==b(c).val()}); b.addValidationRule("range",function(a,c){var b=c.split(","),e=a.val();return+e>=+b[0]&&+e<=+b[1]?!0:!1});b.addValidationRule("regex",function(a,b){return RegExp(b).test(a.val())});b.addValidationRule("checked",function(a){return 0<b('input[type="'+a.attr("type")+'"][name="'+a.attr("name")+'"]:checked').length})})(jQuery,window);
-*/
