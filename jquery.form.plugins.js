@@ -1,12 +1,12 @@
 /*!
- * jQuery Form Processor v3.0
+ * jQuery Form Processor v3.2
  *
- * Copyright (c) 2014 Lucas Dupke; Dual licensed: MIT/GPL
+ * Copyright (c) 2015 Lucas Dupke; Dual licensed: MIT/GPL
  */
 
 (function($, w, u){
 	//Plugin de Mascara
-	$.fn.mask = function(){
+	$.fn.fpMask = function(){
 		var er_masks = {
 			'a' : '[a-zA-Z]',
 			'9' : '[0-9]',
@@ -14,7 +14,7 @@
 		};
 
 		function check_mask () {
-			var mask = $(this).data('mask'),
+			var mask = $(this).data('mask').toString(),
 					val = $(this).val(),
 					arr_val = val.split(''),
 					new_val = '',
@@ -85,19 +85,16 @@
 	//Validação de campo
 	function validate_field( $el ) {
 		var isValid = true,
-				rules = validationRules,
 				elrules = $el.data('req').split('|'),
 				elruleslen = elrules.length,
-				i = 0, aux, fn, args;
+				i = 0, aux;
 
 		while(i < elruleslen) {
-			aux = elrules[i].replace('}', '').split('{');
-			fn = aux[0];
-			args = aux[1];
-
-			if( $.isFunction( rules[ fn ] ) ) {
-				if( !rules[ fn ]($el, args) ) {
+			aux = /([\w\d_]+)({([^!]+)})?/g.exec(elrules[i]);
+			if( $.isFunction( validationRules[ aux[1] ] ) ) {
+				if( !validationRules[ aux[1] ]($el, aux[3]) ) {
 					isValid = false;
+
 				}
 
 			}
@@ -164,7 +161,7 @@
 		var options = $.extend( {}, formProc_default_options, opts );
 
 		if(options.autoMask)
-			this.find( 'input[data-mask], textarea[data-mask]' ).mask();
+			this.find( 'input[data-mask], textarea[data-mask]' ).fpMask();
 
 		if(options.validateOnBlur) {
 			var $elements = this.find( options.formFilter ).filter(':not( ' + options.ignoreFilter + ' )');
@@ -178,6 +175,8 @@
 
 		}
 
+
+		this.attr('novalidate', true);
 
 		this.data( 'sending', false );
 

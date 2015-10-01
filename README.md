@@ -1,91 +1,139 @@
-FormProcessor
-=============
+# FormProcessor
 
-Easy form validation and masking
+ Simple form validation and masking plugin with jQuery
+  - Validation rules controlled by HTML attributes
+  - Easly create your own validation rules
+  - Supports Ajax calls
 
+### How to use:
+Make sure to include **jQuery** in your page:
 
-HTML Setup
+```html
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+```
+Include **jQuery FormProcessor**:
 
-Add "data-req" attribute with on of the validation methods available:
+```html
+<script src="js/jquery.selectric.min.js"></script>
+```
 
-<input type="text" name="my_field" data-req="required">
+Initialize **jQuery FormProcessor**:
 
-
-Core validation methods
-
-- required
-- email
-- date
-- number
-- range{min,max}
-- matches{selector}
-
-
-Adding new methods
-
-$.addValidationRule( 'method_name', function(){
-  return true/false;
-} );
-
-
-Options
-
-onError : function( input, form ) // called when field validation fails
-
-onStart : function( form ) // called when validation process starts
-
-onEnd : function( form, valid ) // called when validation process ends
-
-onAjaxError : function( form ) // calles when ajax fails
-
-formFilter : 'input[data-req], select[data-req], textarea[data-req]' // selector used to find fields inside a form
-
-ignoreFilter : '' // selector to exclude fields from the ones found by "formFilter"
-
-stopOnError : true // if true stops on the first field validation fail
-
-validateOnBlur : // if true validates a field on blur, also validates on submit
-
-autoMask : true // if true apllies mask to all form field with data-mask attribute
-
-
-
-Examples
-
-Full form validation, triggers when form submits
-
-$('form').formProc({
-  validateOnBlur : true,
-  stopOnError : false,
-  autoMask : false,
-  ignoreFilter : '.ignore',
-  onError : function(i,f){ alert('aaaaa' + i); }
+```html
+<script>
+$(function(){
+  $('form').formProc(
+    //options
+  );
 });
+</script>
+```
 
+### HTML Setup
 
-//Field area validation
+Add **data-req** attribute with one of the validation methods available:
 
-var is_valid = $('#some-div-with-inputs').validate({
-                  validateOnBlur : true,
-                  stopOnError : false,
-                  autoMask : false,
-                  ignoreFilter : '.ignore',
-                  onError : function(i,f){ alert('aaaaa' + i); }
-                });
-if( is_valid ) {
-  //Values correct, do something
+```html
+<input type="text" name="my_field" data-req="required">
+```
+
+Add **data-mask** attribute to use masking plugin included:
+
+```html
+<input type="text" name="my_phone_field" data-mask="(99) 9999-99999">
+```
+
+### Options
+
+FormProcessor uses callback functions to handle validation, they need to be setup on the options object when initializing:
+
+```js
+{
+  /*
+   * Type: Function
+   * Description: Function called when submit process starts
+   * Parameter: form - jQuery form element
+   */
+  onStart: function( form ) {},
+
+  /*
+   * Type: Function
+   * Description: Function called when field validation fails
+   * Parameter: input - jQuery (input, select, textarea) element
+   * Parameter: form - jQuery form element
+   */
+  onError: function( input, form ) {},
+
+  /*
+   * Type: Function
+   * Description: Function called when field validation fails
+   * Parameter: form - jQuery form element
+   * Parameter: valid - Boolean indicating if the form values passed all validation rules
+   */
+  onEnd: function( form, valid ) {},
+
+  /*
+   * Type: Function
+   * Description: Function called when ajax call fails
+   * Parameter: form - jQuery form element
+   */
+  onAjaxError: function( form ) {},
+
+  /*
+   * Type: String
+   * Description: Selectors used to filter the field for a form
+   */
+  formFilter: ‘input[data-req], select[data-req], textarea[data-req]’,
+
+  /*
+   * Type: String
+   * Description: Selector used to remove some elements from the one found by "formFilter"
+   */
+  ignoreFilter: ‘’,
+
+  /*
+   * Type: Boolean
+   * Description: Stops when the first field fails validation
+   */
+  stopOnError: true,
+
+  /*
+   * Type: String
+   * Description: if true triggers validation on field blur event, form submit keeps working
+   */
+  validateOnBlur: false,
+
+  /*
+   * Type: String
+   * Description: if true apllies mask to all form fields with data-mask attribute on plugin inicialization
+   */
+  autoMask: true
 }
 
-//Single field validation
+```
 
-var is_valid = $('#some-input').validate({
-                  validateOnBlur : true,
-                  stopOnError : false,
-                  autoMask : false,
-                  ignoreFilter : '.ignore',
-                  onError : function(i,f){ alert('aaaaa' + i); }
-                });
+### Validation Methods
 
-if( is_valid ) {
-  //Value correct, move on
-}
+Validation methods are used on each field that you want to make required. Just add a data-req="method_name" attribute to the field. Some methods can have parameters on them, check the demos for more details on that.
+
+- required - Most basic, test if the field has value or not
+- email - Tests if the field value is an e-mail
+- date{format} - Tests if value is date. Receives the data format as a parameter eg.: datareq="date{m/d/y}"
+- number - Tests if value is a number
+- range{min,max} - Tests if value is a number and is between [min,max] range
+- matches{selector} - Tests if the value is equal to the value of the given selector
+
+You can create your own validation methods to suit your needs.
+
+```js
+$.addValidationRule( 'method_name', function(){
+    //Validation logic
+    return true || false;
+} );
+```
+
+### Demos
+
+[Basic usage, includes mask](http://codepen.io/ldupke/pen/dYGgZR)
+
+[Custom validation rules](http://codepen.io/ldupke/pen/garpOx)
