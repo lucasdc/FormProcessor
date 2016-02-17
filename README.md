@@ -14,7 +14,7 @@ Make sure to include **jQuery** in your page:
 Include **jQuery FormProcessor**:
 
 ```html
-<script src="js/jquery.selectric.min.js"></script>
+<script src="js/jquery.form.plugins.min.js"></script>
 ```
 
 Initialize **jQuery FormProcessor**:
