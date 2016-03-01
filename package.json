@@ -1,0 +1,33 @@
+{
+  "name": "jquery-formprocessor",
+  "title": "jQuery FormProcessor",
+  "version": "3.4.1",
+  "description": "Easy form validation and masking",
+  "main": "dist/jquery.formProcessor.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucasdc/FormProcessor.git"
+  },
+  "keywords": [
+    "jquery-plugins",
+    "ecosystem:jquery",
+    "form",
+    "validation",
+    "mask"
+  ],
+  "author": "Lucas Dupke",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lucasdc/FormProcessor/issues"
+  },
+  "homepage": "https://github.com/lucasdc/FormProcessor#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-header": "^1.7.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^1.5.3"
+  }
+}

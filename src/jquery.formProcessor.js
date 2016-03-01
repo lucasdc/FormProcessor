@@ -1,52 +1,44 @@
-/*!
- * jQuery Form Processor v3.2
- *
- * Copyright (c) 2015 Lucas Dupke; Dual licensed: MIT/GPL
- */
-
-(function($, w, u){
+(function($, w, u) {
 	//Plugin de Mascara
-	$.fn.fpMask = function(){
-		var er_masks = {
-			'a' : '[a-zA-Z]',
-			'9' : '[0-9]',
-			'*' : '[a-zA-Z0-9]'
-		};
+  $.fn.fpMask = function() {
+    var er_masks = {
+      'a' : '[a-zA-Z]',
+      '9' : '[0-9]',
+      '*' : '[a-zA-Z0-9]'
+    };
 
-		function check_mask () {
-			var mask = $(this).data('mask').toString(),
-					val = $(this).val(),
-					arr_val = val.split(''),
-					new_val = '',
-					curr_char,
-					i = 0;
+    function check_mask () {
+      var mask = $(this).data('mask'),
+          val = $(this).val(),
+          arr_val = val.split(''),
+          new_val = '',
+          curr_char,
+          i = 0,
+          er;
 
-			while (i < mask.length && arr_val.length > 0) {
-				curr_char = arr_val.shift();
-				if (er_masks[mask[i]]) {
-					er = new RegExp(er_masks[mask[i]]);
+      while (i < mask.length && arr_val.length > 0) {
+        curr_char = arr_val.shift();
+        if (er_masks[mask[i]]) {
+          er = new RegExp(er_masks[mask[i]]);
 
-					if(er.test(curr_char)) {
-						new_val += curr_char;
-						i++;
-					}
-				} else if (mask[i] != "") {
-					if(mask[i] == curr_char) {
-						new_val += curr_char;
-					} else {
-						new_val += mask[i];
-						arr_val.unshift(curr_char);
-					}
-					i++;
-				}
-			}
-			$(this).val(new_val);
-		}
-		return $(this).each(function(){
-			check_mask.apply(this);
-		}).on('input',check_mask);
-	};
-
+          if(er.test(curr_char)) {
+            new_val += curr_char;
+            i++;
+          }
+        } else if (mask[i] != "") {
+          if(mask[i] == curr_char) {
+            new_val += curr_char;
+          } else {
+            new_val += mask[i];
+            arr_val.unshift(curr_char);
+          }
+          i++;
+        }
+      }
+      $(this).val(new_val);
+    }
+    return $(this).on('input',check_mask);
+  }
 
 	//Regras
 	var validationRules = {},
@@ -113,7 +105,7 @@
 		}
 	}
 
-	$.fn.validate = function(opts){
+	$.fn.validate = function(opts) {
 		var options = $.extend( {}, formProc_default_options, opts ),
 				$form = this,
 				is_valid = true,
@@ -157,7 +149,7 @@
 		return is_valid;
 	};
 
-	$.fn.formProc = function( opts ){
+	$.fn.formProc = function( opts ) {
 		var options = $.extend( {}, formProc_default_options, opts );
 
 		if(options.autoMask)
@@ -165,8 +157,8 @@
 
 		if(options.validateOnBlur) {
 			var $elements = this.find( options.formFilter ).filter(':not( ' + options.ignoreFilter + ' )');
-			$elements.each(function(i, el){
-				$(this).on('blur', function(){
+			$elements.each(function(i, el) {
+				$(this).on('blur', function() {
 					$(this).validate( options );
 
 				});
@@ -180,7 +172,7 @@
 
 		this.data( 'sending', false );
 
-		return $( this ).on( 'submit', function(){
+		return $( this ).on( 'submit', function() {
 			var $form = $( this ),
 					is_valid = true,
 					is_ajax = $form.data( 'ajax' ),
@@ -195,20 +187,20 @@
 
 						$.post( url, $form.serialize() )
 							.done(
-								function(resp){
+								function(resp) {
 									call_fn( ajaxResponses[ is_ajax ], $form, resp );
 
 								}
 
 							).fail(
-								function(){
+								function() {
 									call_fn( options.onAjaxError, $form, $form );
 
 								}
 
 							)
 							.always(
-								function(){
+								function() {
 									$form.data( 'sending', false );
 
 								}
@@ -234,7 +226,7 @@
 	};
 
 	/*DATA*/
-	$.addValidationRule('date', function($el, format, er){
+	$.addValidationRule('date', function($el, format, er) {
 		var format = (format || 'd/m/a').replace('y','a'),
 			mask = format.split(er = /([^\w\d])/gi.exec(format)[0]),
 			dataAux = $el.val().split(er),
@@ -251,12 +243,12 @@
 	});
 
 	/*EMAIL*/
-	$.addValidationRule('email', function($el){
+	$.addValidationRule('email', function($el) {
 		return /^[\w\.%\+\-]+@(?:[A-Z0-9\-]+\.)+(?:[A-Z]{2,6})$/i.test($el.val());
 	});
 
 	/*REQUIRED (max_length)*/
-	$.addValidationRule('required', function($el, maxlength){
+	$.addValidationRule('required', function($el, maxlength) {
 		var mlen = maxlength || 9e6,
 			val = $el.val();
 		if (val.length <= 0 || val.length > mlen)
@@ -265,7 +257,7 @@
 	});
 
 	/*MINIMUM (min_length)*/
-	$.addValidationRule('min', function($el, minlength){
+	$.addValidationRule('min', function($el, minlength) {
 		var mlen = minlength || 0,
 			val = $el.val();
 		if (val.length < mlen)
@@ -274,7 +266,7 @@
 	});
 
 	/*NUMBER*/
-	$.addValidationRule('number', function($el){
+	$.addValidationRule('number', function($el) {
 		var val = $el.val();
 		if (val == '' || isNaN(val))
 			return false;
@@ -282,13 +274,13 @@
 	});
 
 	/*MATCH OTHER FIELD (selector)*/
-	$.addValidationRule('matches', function($el, comp_el){
+	$.addValidationRule('matches', function($el, comp_el) {
 		var val = $el.val();
 		return val == $(comp_el).val();
 	});
 
 	/*RANGE(min, max) Numbers only*/
-	$.addValidationRule('range', function($el, range){
+	$.addValidationRule('range', function($el, range) {
 		var rng = range.split(','),
 			val = $el.val();
 		if (+val >= +rng[0] && +val <= +rng[1])
@@ -297,12 +289,12 @@
 	});
 
 	/*REGULAR EXPRESSION (er)*/
-	$.addValidationRule('regex', function($el, er){
+	$.addValidationRule('regex', function($el, er) {
 		return RegExp(er).test($el.val());
 	});
 
 	/*RADIO BUTTONS & CHECKBOXES*/
-	$.addValidationRule('checked', function($el){
+	$.addValidationRule('checked', function($el) {
 		return $('input[type="' + $el.attr('type') + '"][name="' + $el.attr('name') + '"]:checked').length > 0;
 	});
 })(jQuery, window);

@@ -9,12 +9,12 @@
 Make sure to include **jQuery** in your page:
 
 ```html
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 ```
 Include **jQuery FormProcessor**:
 
 ```html
-<script src="js/jquery.form.plugins.js"></script>
+<script src="jquery.formProcessor.js"></script>
 ```
 
 Initialize **jQuery FormProcessor**:
@@ -109,7 +109,6 @@ FormProcessor uses callback functions to handle validation, they need to be setu
    */
   autoMask: true
 }
-
 ```
 
 ### Validation Methods
@@ -127,8 +126,8 @@ You can create your own validation methods to suit your needs.
 
 ```js
 $.addValidationRule( 'method_name', function(){
-    //Validation logic
-    return true || false;
+  //Validation logic
+  return true || false;
 } );
 ```
 
